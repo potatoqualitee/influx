@@ -1,0 +1,30 @@
+name: export then import
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+jobs:
+  export-import:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check Twitter friends for Maston accounts
+      uses: potatoqualitee/exodus@main
+      id: export
+      with:
+        my: follows, followers
+      env:
+        BLUEBIRDPS_API_KEY: "${{ secrets.BLUEBIRDPS_API_KEY }}"
+        BLUEBIRDPS_API_SECRET: "${{ secrets.BLUEBIRDPS_API_SECRET }}"
+        BLUEBIRDPS_ACCESS_TOKEN: "${{ secrets.BLUEBIRDPS_ACCESS_TOKEN }}"
+        BLUEBIRDPS_ACCESS_TOKEN_SECRET: "${{ secrets.BLUEBIRDPS_ACCESS_TOKEN_SECRET }}"
+
+    - name: Import the results
+      uses: potatoqualitee/influx@initial
+      id: import
+      with:
+        server: tech.lgbt
+        file-path: ${{ steps.export.outputs.mastodon-csv-filepath }}
+        verbose: false
+      env:
+        ACCESS_TOKEN: "${{ secrets.ACCESS_TOKEN }}"

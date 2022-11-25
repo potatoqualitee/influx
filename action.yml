@@ -1,0 +1,56 @@
+name: "Import CSV files to Mastodon"
+branding:
+  icon: "file-plus"
+  color: "gray-dark"
+description: "Imports CSV files to Mastodon"
+inputs:
+  server:
+    description: "Your Mastodon server. If you are dbatools@dataplatform.social, this would be dataplatform.social."
+    required: true
+  file-path:
+    description: "The path to the CSV file. Accepts one or many files, directory paths and even web addresses."
+    required: true
+  type:
+    description: "The type of file. Not required unless the script can't figure it out."
+    required: false
+  recurse:
+    description: "When specifying a directory, recurse. Defaults to false."
+    required: false
+    default: "false"
+  verbose:
+    description: "Show verbose output. Defaults to true."
+    required: true
+    default: "true"
+runs:
+  using: "composite"
+  steps:
+    - id: import
+      shell: pwsh
+      run: |
+        if ("${{ inputs.verbose }}" -eq $true) {
+          $VerbosePreference = "Continue"
+        }
+
+        if ("${{ inputs.recurse }}" -eq $true) {
+          $recurse = $true
+        } else {
+          $recurse = $False
+        }
+        Write-Verbose "Running script"
+
+        if (-not $env:ACCESS_TOKEN) {
+          throw '$env:ACCESS_TOKEN is empty. Did you setup your secrets? Check the docs.'
+        } else {
+          $env:ACCESS_TOKEN = $env:ACCESS_TOKEN.Replace("Bearer ", "")
+        }
+
+        $params = @{
+            Server    = ("${{ inputs.server }}" -split ",").Trim()
+            FilePath  = ("${{ inputs.file-path }}" -split ",").Trim()
+            Recurse   = $recurse
+        }
+        if ("${{ inputs.type }}") {
+          $params.Type = "${{ inputs.type }}"
+        }
+
+        ${{ github.action_path }}/main.ps1 @params

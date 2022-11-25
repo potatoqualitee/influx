@@ -1,0 +1,17 @@
+name: import
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+jobs:
+  check-influx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run the action
+        id: import
+        uses: potatoqualitee/influx@initial
+        with:
+          server: tech.lgbt
+          file-path: https://gist.githubusercontent.com/potatoqualitee/282a881e2c9f1b4edbd240252910fe44/raw/ca2a425f48a99873b1075cebda752a1b9150d315/sql_mastodon.csv
+        env:
+          ACCESS_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
