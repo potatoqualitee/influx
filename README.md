@@ -105,6 +105,44 @@ jobs:
         ACCESS_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
 ```
 
+You can also use GitHub runtime parameters!
+
+
+Note that if any of your follows or followers have been previously blocked on Mastodon, they will be skipped.
+
+```yaml
+name: import from web interface
+on:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: 'Your Mastodon server. If you are dbatools@dataplatform.social, this would be dataplatform.social.'
+        required: true
+      file-path:
+        description: 'The path to the CSV file, using runtime parameters pretty much means you will be specifying a web address.'
+        required: true
+jobs:
+  import:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Import from CSV or zip
+        uses: potatoqualitee/influx@v1
+        with:
+          server: '${{ github.event.inputs.server }}'
+          file-path: '${{ github.event.inputs.file-path }}'
+        env:
+          ACCESS_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
+```
+
+Then it looks like this, so cool:
+
+![image](https://user-images.githubusercontent.com/8278033/204029885-5d0fbe0e-a013-4a24-8e89-4b8a3567e9e7.png)
+
+
 ## How are the import types detected?
 
 I looked at what the web exporter generated and crossed my fingers that it used a standard. Here's how I determine type:

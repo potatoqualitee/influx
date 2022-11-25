@@ -1,4 +1,4 @@
-name: "Import CSV files to Mastodon"
+name: "Mastodon Influx"
 branding:
   icon: "file-plus"
   color: "gray-dark"

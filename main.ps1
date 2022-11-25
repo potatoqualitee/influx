@@ -137,6 +137,7 @@ foreach ($file in $allfiles) {
 
     if ($Type -eq "follows") {
         if (-not $script:blocked) {
+            $script:link = $null
             Write-Verbose "Getting current blocks for follow comparison"
             $script:blocked = Invoke-Request -Path "blocks" -Method GET -UseWebRequest
 
@@ -144,12 +145,13 @@ foreach ($file in $allfiles) {
                 $script:blocked += Invoke-Request -Path $script:link -Method GET -UseWebRequest
             }
 
-            foreach ($blockacct in $script:blocked.acct) {
-                $blockacct = "@" + $blockacct
+            foreach ($block in $script:blocked) {
+                $block.acct = "@" + $block.acct
             }
         }
 
         if ($followcount -lt 3000 -and $csv.count -gt 25) {
+            $script:link = $null
             Write-Verbose "Getting current follows for comparison"
             $followed = Invoke-Request -Path "accounts/$myid/followers?limit=80" -Method GET -UseWebRequest
 
@@ -157,9 +159,24 @@ foreach ($file in $allfiles) {
                 $followed += Invoke-Request -Path $script:link -Method GET -UseWebRequest
             }
 
-            foreach ($follow in $followed) {
-                $follow.acct = "@" + $follow.acct
+            $samplefollow = $followed | Select-Object -First 1 -ExpandProperty acct
+            $samplecsv = $csv | Select-Object -First 1
+            $firstfollow = "$samplefollow".SubString(0, 1)
+            $firstcsv = ($samplecsv.'Account address').SubString(0, 1)
+
+            if ($firstcsv.StartsWith("@") -and -not $firstfollow.StartsWith("@")) {
+                foreach ($follow in $followed) {
+                    $follow.acct = "@" + $follow.acct
+                }
             }
+
+
+            if ($firstfollow.StartsWith("@") -and -not $firstcsv.StartsWith("@")) {
+                foreach ($follow in $csv) {
+                    $follow.'Account address' = "@" + $follow.'Account address'
+                }
+            }
+
             $alreadyfollowed = $csv | Where-Object 'Account address' -in $followed.acct
             $notfollowed = $csv | Where-Object 'Account address' -notin $followed.acct
 
@@ -296,16 +313,12 @@ foreach ($file in $allfiles) {
     }
 
     if ($Type -eq "domainblocks") {
-        $script:blocked = Invoke-Request -Path "domain_blocks" -Method GET
+        $domainblocks= Invoke-Request -Path "domain_blocks" -Method GET
 
-        foreach ($blockacct in $script:blocked.acct) {
-            $blockacct = "@" + $blockacct
-        }
+        $alreadyblocked = $csv | Where-Object { $PSItem -in $domainblocks }
+        $notblocked = $csv | Where-Object { $PSItem -notin $domainblocks }
 
-        $alreadyblocked = $csv | Where-Object { $PSItem -in $script:blocked.acct }
-        $notblocked = $csv | Where-Object { $PSItem -notin $script:blocked.acct }
-
-        Write-Verbose "Blocked $($script:blocked.count) domains. $($csv.count) in the csv file. $($alreadyblocked.count) already blocked. Trying to block $($notblocked.count) new domains"
+        Write-Verbose "Blocked $($domainblocks.count) domains. $($csv.count) in the csv file. $($alreadyblocked.count) already blocked. Trying to block $($notblocked.count) new domains"
 
         foreach ($address in $notblocked) {
             try {

@@ -20,7 +20,7 @@ jobs:
         BLUEBIRDPS_ACCESS_TOKEN_SECRET: "${{ secrets.BLUEBIRDPS_ACCESS_TOKEN_SECRET }}"
 
     - name: Import the results
-      uses: potatoqualitee/influx@main
+      uses: potatoqualitee/influx@v1
       id: import
       with:
         server: tech.lgbt
