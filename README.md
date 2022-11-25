@@ -130,7 +130,7 @@ Here's some extra examples for the inputs.
 
 ### Want to run this locally?
 
-Just add your `$env:ACCESS_TOKEN` environmental variables to your `$profile` and reload, clone the repo, change directories, modify this splat and run.
+Just add your `$env:ACCESS_TOKEN` environmental variables to your `$profile` and reload, clone the repo, change directories, modify this command and run.
 
 ```powershell
 ./main.ps1 -Server yourinstance.tld -FilePath C:\temp\csvdir, https://pubs.com/northwind/csvs.zip
