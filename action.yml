@@ -31,6 +31,8 @@ runs:
           $VerbosePreference = "Continue"
         }
 
+        $env:MASTODON_SERVER = "${{ inputs.server }}"
+
         if ("${{ inputs.recurse }}" -eq $true) {
           $recurse = $true
         } else {

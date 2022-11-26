@@ -140,51 +140,26 @@ foreach ($file in $allfiles) {
             $script:link = $null
             Write-Verbose "Getting current blocks for follow comparison"
             $script:blocked = Invoke-Request -Path "blocks" -Method GET -UseWebRequest
-
-            while ($null -ne $script:link) {
-                $script:blocked += Invoke-Request -Path $script:link -Method GET -UseWebRequest
-            }
-
-            foreach ($block in $script:blocked) {
-                $block.acct = "@" + $block.acct
-            }
         }
 
         if ($followcount -lt 3000 -and $csv.count -gt 25) {
-            $script:link = $null
             Write-Verbose "Getting current follows for comparison"
-            $followed = Invoke-Request -Path "accounts/$myid/followers?limit=80" -Method GET -UseWebRequest
+            $followed = Get-Following
 
-            while ($null -ne $script:link) {
-                $followed += Invoke-Request -Path $script:link -Method GET -UseWebRequest
-            }
-
-            $samplefollow = $followed | Select-Object -First 1 -ExpandProperty acct
-            $samplecsv = $csv | Select-Object -First 1
-            $firstfollow = "$samplefollow".SubString(0, 1)
-            $firstcsv = ($samplecsv.'Account address').SubString(0, 1)
-
-            if ($firstcsv.StartsWith("@") -and -not $firstfollow.StartsWith("@")) {
-                foreach ($follow in $followed) {
-                    $follow.acct = "@" + $follow.acct
-                }
-            }
-
-
-            if ($firstfollow.StartsWith("@") -and -not $firstcsv.StartsWith("@")) {
-                foreach ($follow in $csv) {
-                    $follow.'Account address' = "@" + $follow.'Account address'
+            if (($csv | Select-Object -First 1).'Account address'.Substring(0,1) -eq "@") {
+                foreach ($item in $csv) {
+                    $item.'Account address' = $item.'Account address'.Substring(1)
                 }
             }
 
             $alreadyfollowed = $csv | Where-Object 'Account address' -in $followed.acct
             $notfollowed = $csv | Where-Object 'Account address' -notin $followed.acct
 
-            Write-Verbose "Following $followcount accounts. $($csv.count) in the csv file. $($alreadyfollowed.count) already followed. Trying to follow $($notfollowed.count) new accounts"
+            Write-Verbose "Following $($followed.count) accounts. $($csv.count) in the csv file. $($alreadyfollowed.count) already followed. Trying to follow $($notfollowed.count) new accounts"
             $csv = $notfollowed | Where-Object 'Account address' -notin $blocked.acct
         }
 
-        foreach ($item in $csv) {
+        foreach ($item in ($csv | Sort-Object 'Account address')) {
             try {
                 $address = $item.'Account address'
                 $account = Get-Account -UserName $address
@@ -200,7 +175,7 @@ foreach ($file in $allfiles) {
                     }
                     $body = @{}
                     if ($item.'Show Boosts') {
-                        $body["reblog"] = $item.'Show Boosts'
+                        $body["reblogs"] = $item.'Show Boosts'
                     }
                     if ($item.Languages) {
                         $body["languages"] = $item.Languages
@@ -231,13 +206,16 @@ foreach ($file in $allfiles) {
 
     if ($Type -eq "mutes") {
         $muted = Invoke-Request -Path "mutes" -Method GET
-        foreach ($mute in $muted) {
-            $mute.acct = "@" + $mute.acct
+        if (($csv | Select-Object -First 1).'Account address'.Substring(0,1) -eq "@") {
+            foreach ($item in $csv) {
+                $item.'Account address' = $item.'Account address'.Substring(1)
+            }
         }
+
         $alreadymuted = $csv | Where-Object 'Account address' -in $muted.acct
         $notmuted = $csv | Where-Object 'Account address' -notin $muted.acct
 
-        Write-Verbose "Muted $($muted.count) accounts. $($csv.count) in the csv file. $($alreadymuted.count) already followed. Trying to mute $($notmuted.count) new accounts"
+        Write-Verbose "Muted $($muted.count) accounts. $($csv.count) in the csv file. $($alreadymuted.count) already muted. Trying to mute $($notmuted.count) new accounts"
 
         foreach ($address in $notmuted) {
             try {
@@ -270,14 +248,6 @@ foreach ($file in $allfiles) {
     if ($Type -eq "accountblocks") {
         if (-not $script:blocked) {
             $script:blocked = Invoke-Request -Path "blocks" -Method GET -UseWebRequest
-
-            while ($null -ne $script:link) {
-                $script:blocked += Invoke-Request -Path $script:link -Method GET -UseWebRequest
-            }
-
-            foreach ($blockacct in $script:blocked.acct) {
-                $blockacct = "@" + $blockacct
-            }
         }
 
         $alreadyblocked = $csv | Where-Object { $PSItem -in $script:blocked.acct }
@@ -401,37 +371,47 @@ foreach ($file in $allfiles) {
                 $listid = $thislist.id
             } else {
                 $listid = $thislist.id
-                $existing = Invoke-Request -Path "lists/$listid/accounts" -Method GET
+                $existing = Invoke-Request -Path "lists/$listid/accounts?limit=0" -Method GET
             }
 
-            $members = ($csv | Where-Object List -eq $list).username
+            $members = $csv | Where-Object List -eq $list
 
             if ($existing) {
-                $members = $members | Where-Object { $PSItem -notin $existing.acct }
+                $members = $members | Where-Object UserName -notin $existing.acct
             }
 
             if ($members) {
                 try {
-                    $accounts = Get-Account -UserName $members
+                    $accounts = Get-Account -UserName $members.UserName
                 } catch {
-                    Write-Warning "$address not found"
+                    Write-Warning "Some addresses not found"
                     continue
                 }
+            } else {
+                $accounts = $null
             }
 
             try {
                 if ($accounts.id) {
-                    Write-Verbose "Adding $($accounts.id) to $list"
-                    $parms = @{
-                        Path = "lists/$listid/accounts"
-                        Body = @{ account_ids = $accounts.id } | ConvertTo-Json
-                    }
-                    $null = Invoke-Request @parms
-                    [pscustomobject]@{
-                        List    = $list
-                        Address = $accounts.username
-                        Type    = $Type
-                        Status  = "Success"
+                    # until I figure out how to do the array
+                    # these did not work
+                    # Body = @{ account_ids = ,$accounts.id } | ConvertTo-Json
+                    # Body = @{ account_ids = $accounts.id } | ConvertTo-Json
+                    foreach ($account in $accounts) {
+                        Write-Verbose "Adding $($account.acct) to $list"
+
+                        $parms = @{
+                            Path = "lists/$listid/accounts"
+                            Body = @{ account_ids = @($account.id) } | ConvertTo-Json
+                        }
+
+                        Invoke-Request @parms
+                        [pscustomobject]@{
+                            List    = $list
+                            Address = $account.acct
+                            Type    = $Type
+                            Status  = "Success"
+                        }
                     }
                 } else {
                     Write-Verbose "No new members to add to $list"
@@ -439,7 +419,7 @@ foreach ($file in $allfiles) {
             } catch {
                 [pscustomobject]@{
                     List    = $list
-                    Address = $accounts.username
+                    Address = $account.acct
                     Type    = $Type
                     Status  = "$PSItem"
                 }

@@ -1,7 +1,34 @@
+function Get-Follower {
+    [CmdletBinding()]
+    param(
+        [psobject[]]$Id = $myid
+    )
+    $script:link = $null
+    Invoke-Request -Path "accounts/$Id/followers" -Method GET -UseWebRequest
+
+    while ($null -ne $script:link) {
+        Invoke-Request -Path $script:link -Method GET -UseWebRequest
+    }
+}
+
+function Get-Following {
+    [CmdletBinding()]
+    param(
+        [psobject[]]$Id = $myid
+    )
+    $script:link = $null
+    Invoke-Request -Path "accounts/$Id/following" -Method GET -UseWebRequest
+
+    while ($null -ne $script:link) {
+        Invoke-Request -Path $script:link -Method GET -UseWebRequest
+    }
+}
+
 
 function Invoke-Request {
     param(
         [string]$Method = "POST",
+        [string]$Server = $env:MASTODON_SERVER,
         [Parameter(Mandatory)]
         [string]$Path,
         [string]$Version = "v1",
@@ -31,6 +58,7 @@ function Invoke-Request {
 
     if ($UseWebRequest) {
         $response = Invoke-WebRequest @parms
+
         if ($response.Headers.Link) {
             $script:link = $response.Headers.Link.Split(";") | Where-Object { $PSitem -match "max_id" } | Select-Object -First 1
             if ($script:link) {
@@ -41,12 +69,7 @@ function Invoke-Request {
         } else {
             $script:link = $null
         }
-        <#
-            infinite paging would work like this
-            while ($null -ne $script:link) {
-                $followed += Invoke-Request -Path $script:link -Method GET -UseWebRequest
-            }
-        #>
+
         $response.Content | ConvertFrom-Json -Depth 5
     } else {
         Invoke-RestMethod @parms
@@ -65,6 +88,7 @@ function Get-Account {
     )
 
     foreach ($user in $UserName) {
+        $user = $user.Replace("@$env:MASTODON_SERVER", "")
         if ($user.StartsWith("@")) {
             $user = $user.Substring(1)
         }

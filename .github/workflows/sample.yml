@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Run the action
         id: import
-        uses: potatoqualitee/influx@initial
+        uses: potatoqualitee/influx@v1
         with:
           server: tech.lgbt
           file-path: https://gist.githubusercontent.com/potatoqualitee/282a881e2c9f1b4edbd240252910fe44/raw/ca2a425f48a99873b1075cebda752a1b9150d315/sql_mastodon.csv
