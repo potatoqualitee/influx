@@ -20,7 +20,7 @@ Here's how you'd import a singular file if your account is on the dataplatform.s
   uses: potatoqualitee/influx@v1
     with:
         server: dataplatform.social
-        filepath: ./follows.csv
+        file-path: ./follows.csv
     env:
         ACCESS_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
 ```
