@@ -1,0 +1,15 @@
+
+name: Import Twitter Friends to Mastodon
+on:
+  workflow_dispatch:
+jobs:
+  check-exodus:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Import CSV to Mastodon
+        uses: potatoqualitee/influx@v1
+        with:
+            server: dataplatform.social
+            file-path: https://raw.githubusercontent.com/dataplat/mastodon/main/dataplat/mastodon-import.csv, https://raw.githubusercontent.com/dataplat/mastodon/main/powershell/mastodon-import.csv, https://raw.githubusercontent.com/dataplat/mastodon/main/powerbi/mastodon-import.csv
+        env:
+            ACCESS_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
