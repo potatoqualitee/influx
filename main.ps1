@@ -394,7 +394,7 @@ foreach ($file in $allfiles) {
             try {
                 if ($accounts.id) {
                     # until I figure out how to do the array
-                    # these did not work
+                    # these did not work, they showed success but never added
                     # Body = @{ account_ids = ,$accounts.id } | ConvertTo-Json
                     # Body = @{ account_ids = $accounts.id } | ConvertTo-Json
                     foreach ($account in $accounts) {
