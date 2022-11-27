@@ -105,8 +105,9 @@ jobs:
         ACCESS_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
 ```
 
-You can also use GitHub runtime parameters!
+#### Runtime parameters
 
+You can also use GitHub runtime parameters!
 
 Note that if any of your follows or followers have been previously blocked on Mastodon, they will be skipped.
 
@@ -141,7 +142,6 @@ jobs:
 Then it looks like this, so cool:
 
 ![image](https://user-images.githubusercontent.com/8278033/204029885-5d0fbe0e-a013-4a24-8e89-4b8a3567e9e7.png)
-
 
 ## How are the import types detected?
 
