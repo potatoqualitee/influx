@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Import CSV to Mastodon
-        uses: potatoqualitee/influx@v1
+        uses: potatoqualitee/influx@main
         with:
             server: tech.lgbt
             file-path: https://raw.githubusercontent.com/dataplat/mastodon/main/dataplat/mastodon-import.csv, https://raw.githubusercontent.com/dataplat/mastodon/main/powershell/mastodon-import.csv, https://raw.githubusercontent.com/dataplat/mastodon/main/powerbi/mastodon-import.csv
