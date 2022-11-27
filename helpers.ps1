@@ -93,6 +93,14 @@ function Get-Account {
             $user = $user.Substring(1)
         }
 
+        $ignored = "youtube.com", "medium.com", "withkoji.com", "counter.social", "twitter.com"
+        foreach ($domain in $ignored) {
+            if ($user -match $domain) {
+                Write-Verbose "User ($user) matched invalid Mastodon domain ($domain). Skipping."
+                continue
+            }
+        }
+
         $account = $script:accounts | Where-Object acct -eq $user
 
         if (-not $user.StartsWith("http")) {
