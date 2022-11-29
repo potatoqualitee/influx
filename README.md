@@ -185,6 +185,12 @@ Pull requests are welcome!
 
 I think Exodus and Influx could benefit from JavaScript integration to Mastadon, maybe? Making it easy to pick and choose who to import.
 
+## You may also enjoy...
+
+* [Mastodon Fossilize](https://github.com/marketplace/actions/mastodon-fossilize) - This Action will help you backup Mastodon account items to CSV files, including: Follows, Mutes, Account blocks, Lists, Bookmarks, Domain blocks, Followers, Posts
+* [Twitter Exodus](https://github.com/marketplace/actions/twitter-exodus) - This Action helps Twitter communities find members on Mastodon. Searches lists, hashtags, account followers and more for Mastodon links in their name, bio or pinned tweet. Once found, their info is exported to a CSV file that can be imported into Mastodon.
+* [Using GitHub Pages to Setup an Alias on Mastodon](https://blog.netnerds.net/2022/11/alias-mastodon-github-pages/) - This tutorial can help you keep your social media presence without running your own Mastodon server.
+* 
 ## TODO
 You tell me! I'm open to suggestions.
 
